@@ -1,6 +1,44 @@
 <?php
 
-function validateInput(string $input, bool $isRequired = true)
+/**
+ * sanitizeInput
+ *
+ * @param string $input
+ * @param mixed $sanitizeType string|int|email|url
+ * @return void
+ */
+function sanitizeInput(string $input, mixed $sanitizeType)
+{
+    if($sanitizeType == 'string') {
+        $sanitizedInput = htmlspecialchars($input);
+
+        return $sanitizedInput;
+    }
+
+    switch($sanitizeType) {
+        case 'int':
+            $sanitizeType = FILTER_SANITIZE_NUMBER_INT;
+            break;
+        case 'email':
+            $sanitizeType = FILTER_SANITIZE_EMAIL;
+            break;
+        case 'url':
+            $sanitizeType = FILTER_SANITIZE_URL;
+            break;
+    }
+
+    $sanitizedInput = filter_var($input, $sanitizeType);
+
+    if(! $sanitizedInput) {
+        echo "Invalid input sanitize field: {$input}!";
+
+        exit;
+    }
+
+    return $sanitizedInput;
+}
+
+function validateInput(string $input, bool $isRequired = true, mixed $sanitizeType = false)
 {
     $issetInput = isset($_REQUEST[$input]);
 
@@ -18,14 +56,20 @@ function validateInput(string $input, bool $isRequired = true)
         exit;
     }
 
+    if($sanitizeType) {
+        $sanitizedInput = sanitizeInput($_REQUEST[$input], $sanitizeType);
+
+        return $sanitizedInput;
+    }
+
     return $_REQUEST[$input];
 }
 
 $canDrive = false;
 
-$name = validateInput('name');
-$age = validateInput('age');
-$email = validateInput('email', false);
+$name = validateInput(input: 'name', sanitizeType: 'string');
+$age = validateInput(input: 'age', sanitizeType: 'int');
+$email = validateInput(input: 'email', sanitizeType: 'email');
 
 if($age >= 18) {
     $canDrive = true;
